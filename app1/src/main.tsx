@@ -2,14 +2,12 @@ import * as React from 'react'
 import { render } from 'react-dom'
 import { v4 as uuid } from 'uuid'
 
-function sendMessageAndReturnResponse(message: string, params: any = null, source = 'application'): Promise<any> {
+function sendMessageAndReturnResponse(message, params = null, source = 'application'): Promise<any> {
   return new Promise((resolve, reject) => {
     const id = uuid()
-    console.log(`app1: Sending message "${message}" with id "${id}"`)
 
     const responseHandler = event => {
       if (event.data.source === 'host' && event.data.id === id) {
-        console.log(`app1: Received response to message "${id}": "${JSON.stringify(event.data.response)}"`)
 
         window.removeEventListener('message', responseHandler)
 
@@ -22,7 +20,7 @@ function sendMessageAndReturnResponse(message: string, params: any = null, sourc
   })
 }
 
-function sendMessageAndReturnResponseWithTimeout(message: string, params: any = null, source = 'application'): Promise<any> {
+function sendMessageAndReturnResponseWithTimeout(message, params = null, source = 'application'): Promise<any> {
   return new Promise((resolve, reject) => {
     const id = uuid()
     console.log(`app1: Sending message "${message}" with id "${id}"`)
