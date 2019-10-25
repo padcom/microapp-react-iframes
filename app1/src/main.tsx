@@ -67,39 +67,3 @@ function App () {
 }
 
 render(<App />, document.getElementById('app'))
-
-// --------------------------------------
-// For demonstration purposes only
-// --------------------------------------
-
-function getMessageWithTimeout () {
-  return new Promise((resolve, reject) => {
-    const id = uuid.v4()
-    console.log(`app1: Sending message with id ${id}`)
-
-    let timeout = null
-
-    const responseHandler = e => {
-      if (e.data.source === 'host' && e.data.id === id) {
-        if (timeout !== null) clearTimeout(timeout)
-        console.log('Received response to message', id, ': "', e.data.response, '"')
-        window.removeEventListener('message', responseHandler)
-        resolve(e.data.response)
-      }
-    }
-
-    window.addEventListener('message', responseHandler)
-
-    timeout = setTimeout(() => {
-      window.removeEventListener('message', responseHandler)
-      reject(`Timeout when waiting for response to message ${id}`)
-    }, 1000)
-
-    window.parent.postMessage({
-      id,
-      source: 'application',
-      message: 'fetchData',
-      params: { x: 1 } 
-    }, window.location.href)
-  })
-}
