@@ -1,0 +1,23 @@
+{
+  "name": "app1",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "parcel --public-url /app1 -p 8001 index.html"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/react": "^16.9.11",
+    "@types/react-dom": "^16.9.3",
+    "@types/uuid": "^3.4.5",
+    "parcel": "^1.12.4",
+    "typescript": "^3.6.4"
+  },
+  "dependencies": {
+    "react": "^16.11.0",
+    "react-dom": "^16.11.0",
+    "uuid": "^3.3.3"
+  }
+}
