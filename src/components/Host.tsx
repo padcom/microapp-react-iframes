@@ -46,7 +46,9 @@ export default function () {
 
   return (
     <div className="app">
-      <div className="header"><h1>Header!</h1></div>
+      <div className="header">
+        <h1>Header!</h1>
+      </div>
       <div className="nav">
         <ul> 
         {
@@ -61,7 +63,9 @@ export default function () {
       <div className="content">
         <iframe src={page}></iframe>
       </div>
-      <div className="footer">Footer</div>
+      <div className="footer">
+        <h5>Footer</h5>
+      </div>
     </div>
   )
 }
