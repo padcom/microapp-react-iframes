@@ -9,7 +9,7 @@ function sendMessageAndReturnResponse(message: string, params: any = null, sourc
 
     const responseHandler = event => {
       if (event.data.source === 'host' && event.data.id === id) {
-        console.log(`app1: Received response to message "${id}": "${event.data.response}"`)
+        console.log(`app1: Received response to message "${id}": "${JSON.stringify(event.data.response)}"`)
 
         window.removeEventListener('message', responseHandler)
 
@@ -31,7 +31,7 @@ function sendMessageAndReturnResponseWithTimeout(message: string, params: any = 
 
     const responseHandler = event => {
       if (event.data.source === 'host' && event.data.id === id) {
-        console.log(`app1: Received response to message "${id}": "${event.data.response}"`)
+        console.log(`app1: Received response to message "${id}": "${JSON.stringify(event.data.response)}"`)
 
         window.removeEventListener('message', responseHandler)
         if (timeout) clearTimeout(timeout)
@@ -55,7 +55,7 @@ function App () {
 
   const fetchData = () => {
     sendMessageAndReturnResponseWithTimeout('fetchMessage')
-      .then((response: string) => setMessage(response))
+      .then(response => setMessage(response.message))
   }
 
   return (
