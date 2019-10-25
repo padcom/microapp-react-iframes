@@ -8,9 +8,7 @@ function sendMessageAndReturnResponse(message, params = null, source = 'applicat
 
     const responseHandler = event => {
       if (event.data.source === 'host' && event.data.id === id) {
-
         window.removeEventListener('message', responseHandler)
-
         resolve(event.data.response)
       }
     }
