@@ -30,6 +30,11 @@ const api = event => {
 export default function () {
   const [ page, setPage ] = React.useState('/app1')
 
+  const pages = [
+    { title: 'App1', src: '/app1' },
+    { title: 'App2', src: '/app2' },
+  ]
+
   React.useEffect(() => {
     console.log('Registering API')
     window.addEventListener('message', api)
@@ -38,11 +43,6 @@ export default function () {
       window.removeEventListener('message', api)
     }
   })
-
-  const pages = [
-    { title: 'App1', src: '/app1' },
-    { title: 'App2', src: '/app2' },
-  ]
 
   return (
     <div className="app">
