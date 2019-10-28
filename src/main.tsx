@@ -50,7 +50,7 @@ function startWebSocket(url: string, id: string, source: MessageEventSource, ori
   // with a correlation id same as the one passed in to this function then
   // it checks if it understands what to do with it. The main task is to close
   // the websocket and remove itself from the "onmessage" handlers.
-  const websocketMessageHandler = (event: MessageEvent) => {
+  function websocketMessageHandler (event: MessageEvent) {
     if (event.data.source === 'application' && event.data.id === id) {
       switch (event.data.message) {
         case 'close-websocket': {
@@ -72,7 +72,7 @@ function startWebSocket(url: string, id: string, source: MessageEventSource, ori
 // this is sort of the main communication point for messages sent from the applications
 // to the host. It can be all sorts of things ranging from communication with external
 // resources to navigation to another application.
-const apiMessageHandler = (event: MessageEvent) => {
+function apiMessageHandler (event: MessageEvent) {
   if (event.data.source == 'application') {
     console.log(`HOST: Received message "${event.data.message}" with id "${event.data.id}"`, event)
 

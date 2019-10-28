@@ -8,7 +8,7 @@ let HOST_ORIGIN = null
 
 // this event listener handles global messges from the host
 // like for example receiving application's metadata
-const masterMessageHandler = (event: MessageEvent) => {
+function masterMessageHandler (event: MessageEvent) {
   if (event.data.source === 'host') {
     switch (event.data.message) {
       case 'metadata': {
@@ -42,7 +42,7 @@ function websocket<T> (message, params = null, source = 'application'): Observab
 
   // create observable that will transfer the data to the subscriber
   return new Observable<T>(subscriber => {
-    const handler = (event: MessageEvent) => {
+    function handler (event: MessageEvent) {
       if (event.data.source === 'host' && event.data.id === id) {
         console.log('APP2: received message for subject', event.data)
         switch (event.data.state) {
