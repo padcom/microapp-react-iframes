@@ -108,7 +108,7 @@ function Host() {
       console.log('HOST: Unregistering API')
       window.removeEventListener('message', api)
     }
-  })
+  }, [])
 
   function sendMetadata() {
     sendMessageToIFrame(iframe.current as HTMLIFrameElement, 'metadata', {

@@ -75,48 +75,6 @@ function websocket(message, params = null, source = 'application'): Observable<a
   })
 }
 
-function Example ({ messages }) {
-  return (
-    <ul>
-      { messages.map(message => <li key={message}>{message}</li>) }
-    </ul>
-  )
-}
-
-class App extends React.Component {
-  constructor (props) {
-    super(props)
-
-    this.state = {
-      messages: []
-    }
-
-    // create subscription
-    const subscription = websocket('example-websocket').subscribe(data => {
-      // @ts-ignore
-      console.log('APP2: data from parent websocket', data, this.state.messages)
-      // @ts-ignore
-      this.setState({ messages: [ ...this.state.messages, data.timestamp ] })
-    })
-
-    // this event is fired when we switch away from the application
-    window.addEventListener('unload', e => {
-      console.log('APP2: closing host websocket')
-      subscription.unsubscribe()
-    }, { once: true })
-  }
-
-  render () {
-    return (
-      <div>
-        <h1>App 2!</h1>
-        <Example messages={this.state.messages} />
-      </div>
-    )
-  }
-}
-
-/*
 function App () {
   const [ messages, setMessages ] = React.useState([])
 
@@ -124,7 +82,7 @@ function App () {
     // create subscription
     const subscription = websocket('example-websocket').subscribe(data => {
       console.log('APP2: data from parent websocket', data, messages)
-      setMessages(messages.concat([ data.timestamp ])
+      setMessages(msgs => [ ...msgs, data.timestamp ])
     })
 
     // this event is fired when we switch away from the application
@@ -144,8 +102,9 @@ function App () {
   return (
     <div>
       <h1>App 2!</h1>
-      <Example messages={messages} />
+      <ul>
+        { messages.map(message => <li key={message}>{message}</li>) }
+      </ul>
     </div>
   )
 }
-*/
