@@ -5,6 +5,9 @@ import { webSocket } from 'rxjs/webSocket'
 
 import './main.css'
 
+/**
+ * Just a simple method that fetches something from the backend
+ */
 function fetchMessage () {
   return fetch('/api/message')
     .then(response => {
@@ -17,9 +20,50 @@ function fetchMessage () {
     .then(data => data)
 }
 
-function pollData (source: MessageEventSource, id: string, origin: string) {
-  // @ts-ignore
-  source.postMessage({ source: 'host', id, message: 'data', payload: { message: 'Hello' } }, origin)
+/**
+ * Open a websocket and forward its messages to the sender.
+ * 
+ * @param url URL of the websocket to connect to
+ * @param id correlation id
+ * @param source source frame to send the data to
+ * @param origin origin of the source frame - needed for apps served from another domain
+ */
+function startWebSocket(url: string, id: string, source: MessageEventSource, origin: string) {
+  const ws = webSocket(url).subscribe(
+    payload => {
+      console.log('HOST: received message over websocket', id, payload)
+      // @ts-ignore
+      source.postMessage({ source: 'host', id, state: 'data', payload }, origin)
+    },
+    error => {
+      console.log('HOST: error over websocket', id, error)
+      // @ts-ignore
+      source.postMessage({ source: 'host', id, state: 'error', error }, origin)
+    },
+    () => {
+      console.log('HOST: websocket closed', id)
+      // @ts-ignore
+      source.postMessage({ source: 'host', id, state: 'closed' }, origin)
+    }
+  )
+
+  const handler = (event: MessageEvent) => {
+    if (event.data.source === 'application' && event.data.id === id) {
+      switch (event.data.message) {
+        case 'close-websocket': {
+          console.log('HOST: Received unsubscribe event for socket', id)
+          window.removeEventListener('message', handler)
+          ws.unsubscribe()
+          break;
+        }
+        default: {
+          throw new Error(`Unrecognized message ${event.data.message}`)
+        }
+      }
+    }
+  }
+
+  window.addEventListener('message', handler)
 }
 
 const api = (event: MessageEvent) => {
@@ -27,53 +71,15 @@ const api = (event: MessageEvent) => {
     console.log(`HOST: Received message "${event.data.message}" with id "${event.data.id}"`, event)
 
     switch (event.data.message) {
-      case 'fetchMessage': {
+      case 'fetch-message': {
         fetchMessage().then(response => {
           // @ts-ignore
           event.source.postMessage({ source: 'host', id: event.data.id, response }, event.origin)
         })
         break;
       }
-      case 'startPollingData': {
-        let ws: any = null
-        // console.log('HOST: closing websocket', event.data.id)
-        // ws.unsubscribe()
-        ws = webSocket('ws://localhost:8080/').subscribe(
-          msg => {
-            console.log('HOST: received message over websocket', event.data.id, msg)
-            // @ts-ignore
-            event.source.postMessage({ source: 'host', id: event.data.id, state: 'data', payload: msg }, event.origin)
-          },
-          error => {
-            console.log('HOST: error over websocket', event.data.id, error)
-            // @ts-ignore
-            event.source.postMessage({ source: 'host', id: event.data.id, state: 'error', error }, event.origin)
-          },
-          () => {
-            console.log('HOST: websocket closed', event.data.id)
-            // @ts-ignore
-            event.source.postMessage({ source: 'host', id: event.data.id, state: 'closed' }, event.origin)
-          }
-        )
-
-        const handler = (closeEvent: MessageEvent) => {
-          if (closeEvent.data.source === 'application' && closeEvent.data.id === event.data.id) {
-            switch (closeEvent.data.message) {
-              case 'startPollingData-close': {
-                console.log('HOST: Received unsubscribe event for socket', event.data.id)
-                window.removeEventListener('message', handler)
-                ws.unsubscribe()
-                break;
-              }
-              default: {
-                throw new Error(`Unrecognized message ${closeEvent.data.message}`)
-              }
-            }
-          }
-        }
-
-        window.addEventListener('message', handler)
-
+      case 'example-websocket': {
+        startWebSocket('ws://localhost:8080/', event.data.id, event.source, event.origin)
         break
       }
     }
@@ -92,13 +98,14 @@ function Host() {
     { title: 'App1', src: '/app1' },
     { title: 'App2', src: '/app2' },
     { title: 'App1-remote', src: 'http://localhost:8001/app1' },
+    { title: 'App2-remote', src: 'http://localhost:8002/app2' },
   ]
 
   React.useEffect(() => {
-    console.log('Registering API')
+    console.log('HOST: Registering API')
     window.addEventListener('message', api)
     return () => {
-      console.log('Unregistering API')
+      console.log('HOST: Unregistering API')
       window.removeEventListener('message', api)
     }
   })

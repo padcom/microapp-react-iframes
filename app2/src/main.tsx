@@ -3,41 +3,55 @@ import { render } from 'react-dom'
 import { v4 as uuid } from 'uuid'
 
 import { Observable } from 'rxjs'
-import { finalize, share } from 'rxjs/operators'
 
 let HOST_ORIGIN = null
 
+// this event listener handles global messges from the host
+// like for example receiving application's metadata
 window.addEventListener('message', event => {
   if (event.data.source === 'host') {
     switch (event.data.message) {
       case 'metadata': {
-        console.log('Received metadata', event.data.payload)
+        console.log('APP2: Received metadata', event.data.payload)
         HOST_ORIGIN = event.data.payload.hostOrigin
+
+        // now that we have the metadata we can start the application
+        render(<App />, document.getElementById('app'))
+
         break
       }
     }
   }
 })
 
-function parentWebsocketSubject(message, params = null, source = 'application'): Subject<any> {
+/**
+ * Create a proxied websocket observable
+ * 
+ * @param message message to send to the parent to connect the websocket
+ * @param params optional parameters to send with the message
+ * @param source optional alternate source for the message (leave alone!)
+ */
+function websocket(message, params = null, source = 'application'): Observable<any> {
   const id = uuid()
 
+  // create observable that will transfer the data to the subscriber
   return new Observable(subscriber => {
-    const handler = event => {
+    const handler = (event: MessageEvent) => {
       if (event.data.source === 'host' && event.data.id === id) {
         console.log('APP2: received message for subject', event.data)
         switch (event.data.state) {
           case 'data': {
+            console.log('APP2: websocket data', event.data.payload)
             subscriber.next(event.data.payload)
             break
           }
           case 'error': {
+            console.log('APP2: websocket error', event.data.error)
             subscriber.error(event.data.error)
             break
           }
           case 'closed': {
-            console.log('APP2: sending message to host to close the websocket')
-            window.parent.postMessage({ id, source, message: message + '-close', params }, HOST_ORIGIN)
+            console.log('APP2: websocket closed')
             window.removeEventListener('message', handler)
             break
           }
@@ -48,36 +62,90 @@ function parentWebsocketSubject(message, params = null, source = 'application'):
       }
     }
     window.addEventListener('message', handler)
+
+    // send message to parent to start websocket
     window.parent.postMessage({ id, source, message, params }, HOST_ORIGIN)
 
+    // this code is called when we unsubscribe from the subscription
     return () => {
       console.log('APP2: cleaning up observable')
-      window.parent.postMessage({ id, source, message: message + '-close', params }, HOST_ORIGIN)
+      window.parent.postMessage({ id, source, message: 'close-websocket', params }, HOST_ORIGIN)
       window.removeEventListener('message', handler)
     }
   })
 }
 
+function Example ({ messages }) {
+  return (
+    <ul>
+      { messages.map(message => <li key={message}>{message}</li>) }
+    </ul>
+  )
+}
+
+class App extends React.Component {
+  constructor (props) {
+    super(props)
+
+    this.state = {
+      messages: []
+    }
+
+    // create subscription
+    const subscription = websocket('example-websocket').subscribe(data => {
+      // @ts-ignore
+      console.log('APP2: data from parent websocket', data, this.state.messages)
+      // @ts-ignore
+      this.setState({ messages: [ ...this.state.messages, data.timestamp ] })
+    })
+
+    // this event is fired when we switch away from the application
+    window.addEventListener('unload', e => {
+      console.log('APP2: closing host websocket')
+      subscription.unsubscribe()
+    }, { once: true })
+  }
+
+  render () {
+    return (
+      <div>
+        <h1>App 2!</h1>
+        <Example messages={this.state.messages} />
+      </div>
+    )
+  }
+}
+
+/*
 function App () {
+  const [ messages, setMessages ] = React.useState([])
+
   React.useEffect(() => {
-    const subject = parentWebsocketSubject('startPollingData')
-    const subscription = subject.subscribe(data => { console.log('PARENT-WS:', data) })
+    // create subscription
+    const subscription = websocket('example-websocket').subscribe(data => {
+      console.log('APP2: data from parent websocket', data, messages)
+      setMessages(messages.concat([ data.timestamp ])
+    })
+
+    // this event is fired when we switch away from the application
     window.addEventListener('unload', e => {
       console.log('APP2: closing host websocket')
       subscription.unsubscribe()
     })
+
+    // this is fired when a component is unmounted (doesn't happen at all on root-level component
+    // hence the 'unload' global event handler above)
     return () => {
       console.log('APP2: closing host websocket')
       subscription.unsubscribe()
     }
-  })
+  }, [])
 
-  return <h1>App 2!</h1>
+  return (
+    <div>
+      <h1>App 2!</h1>
+      <Example messages={messages} />
+    </div>
+  )
 }
-
-render(<App />, document.getElementById('app'))
-
-setTimeout(() => {
-  // @ts-ignore
-  console.log('App 2 rendered')
-}, 100)
+*/

@@ -12,8 +12,10 @@ const server = http.createServer(app)
 const wss = new WebSocket.Server({ server })
 
 wss.on('connection', ws => {
+  console.log('WebSocket opened')
   const timer = setInterval(() => { ws.send(JSON.stringify({ timestamp: new Date().toISOString() })) }, 1000)
   ws.on('close', () => {
+    console.log('WebSocket closed')
     clearInterval(timer)
   })
 })
