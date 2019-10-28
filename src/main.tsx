@@ -17,7 +17,6 @@ function fetchMessage () {
         return response.json()
       }
     })
-    .then(data => data)
 }
 
 /**
@@ -29,7 +28,7 @@ function fetchMessage () {
  * @param origin origin of the source frame - needed for apps served from another domain
  */
 function startWebSocket(url: string, id: string, source: MessageEventSource, origin: string) {
-  const ws = webSocket(url).subscribe(
+  const websocket = webSocket(url).subscribe(
     payload => {
       console.log('HOST: received message over websocket', id, payload)
       // @ts-ignore
@@ -51,13 +50,13 @@ function startWebSocket(url: string, id: string, source: MessageEventSource, ori
   // with a correlation id same as the one passed in to this function then
   // it checks if it understands what to do with it. The main task is to close
   // the websocket and remove itself from the "onmessage" handlers.
-  const handler = (event: MessageEvent) => {
+  const websocketMessageHandler = (event: MessageEvent) => {
     if (event.data.source === 'application' && event.data.id === id) {
       switch (event.data.message) {
         case 'close-websocket': {
           console.log('HOST: Received unsubscribe event for socket', id)
-          window.removeEventListener('message', handler)
-          ws.unsubscribe()
+          window.removeEventListener('message', websocketMessageHandler)
+          websocket.unsubscribe()
           break;
         }
         default: {
@@ -67,13 +66,13 @@ function startWebSocket(url: string, id: string, source: MessageEventSource, ori
     }
   }
 
-  window.addEventListener('message', handler)
+  window.addEventListener('message', websocketMessageHandler)
 }
 
 // this is sort of the main communication point for messages sent from the applications
 // to the host. It can be all sorts of things ranging from communication with external
 // resources to navigation to another application.
-const apiHandler = (event: MessageEvent) => {
+const apiMessageHandler = (event: MessageEvent) => {
   if (event.data.source == 'application') {
     console.log(`HOST: Received message "${event.data.message}" with id "${event.data.id}"`, event)
 
@@ -125,10 +124,10 @@ function Host() {
   // is capable of responding to any messages sent from the applications
   React.useEffect(() => {
     console.log('HOST: Registering API')
-    window.addEventListener('message', apiHandler)
+    window.addEventListener('message', apiMessageHandler)
     return () => {
       console.log('HOST: Unregistering API')
-      window.removeEventListener('message', apiHandler)
+      window.removeEventListener('message', apiMessageHandler)
     }
   }, [])
 

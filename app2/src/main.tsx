@@ -8,7 +8,7 @@ let HOST_ORIGIN = null
 
 // this event listener handles global messges from the host
 // like for example receiving application's metadata
-window.addEventListener('message', event => {
+const masterMessageHandler = (event: MessageEvent) => {
   if (event.data.source === 'host') {
     switch (event.data.message) {
       case 'metadata': {
@@ -22,7 +22,9 @@ window.addEventListener('message', event => {
       }
     }
   }
-})
+}
+
+window.addEventListener('message', masterMessageHandler)
 
 interface ExampleWebsocketPayload {
   timestamp: string
