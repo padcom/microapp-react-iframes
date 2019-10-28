@@ -2,8 +2,21 @@
 
 const Bundler = require('parcel-bundler')
 const express = require('express')
+const http = require('http')
+const WebSocket = require('ws')
 
 const app = express()
+
+const server = http.createServer(app)
+
+const wss = new WebSocket.Server({ server })
+
+wss.on('connection', ws => {
+  const timer = setInterval(() => { ws.send(JSON.stringify({ timestamp: new Date().toISOString() })) }, 1000)
+  ws.on('close', () => {
+    clearInterval(timer)
+  })
+})
 
 app.get('/api/message', (req, res) => {
   res.json({ message: 'message from server' })
@@ -15,4 +28,4 @@ app.use('/app2', express.static('./app2/dist'))
 const bundler = new Bundler('index.html')
 app.use(bundler.middleware())
 
-app.listen(8080)
+server.listen(8080)
