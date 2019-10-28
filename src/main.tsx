@@ -47,6 +47,10 @@ function startWebSocket(url: string, id: string, source: MessageEventSource, ori
     }
   )
 
+  // this handler listens for messages and if one from the application is found
+  // with a correlation id same as the one passed in to this function then
+  // it checks if it understands what to do with it. The main task is to close
+  // the websocket and remove itself from the "onmessage" handlers.
   const handler = (event: MessageEvent) => {
     if (event.data.source === 'application' && event.data.id === id) {
       switch (event.data.message) {
@@ -66,7 +70,10 @@ function startWebSocket(url: string, id: string, source: MessageEventSource, ori
   window.addEventListener('message', handler)
 }
 
-const api = (event: MessageEvent) => {
+// this is sort of the main communication point for messages sent from the applications
+// to the host. It can be all sorts of things ranging from communication with external
+// resources to navigation to another application.
+const apiHandler = (event: MessageEvent) => {
   if (event.data.source == 'application') {
     console.log(`HOST: Received message "${event.data.message}" with id "${event.data.id}"`, event)
 
@@ -86,6 +93,17 @@ const api = (event: MessageEvent) => {
   }
 }
 
+/**
+ * Helper function to send messages to an iframe.
+ * This is used in the push scenario when the host can
+ * notify the application about something.
+ * 
+ * Initially used only for pushing metadata to the application upon initialization
+ * 
+ * @param iframe target iframe
+ * @param message message to send to the iframe
+ * @param payload message payload
+ */
 function sendMessageToIFrame(iframe: HTMLIFrameElement, message: string, payload: any) {
   iframe.contentWindow.postMessage({ source: 'host', message, payload }, new URL(iframe.src).origin)
 }
@@ -94,6 +112,8 @@ function Host() {
   const [ page, setPage ] = React.useState('/app1')
   const iframe = React.useRef()
 
+  // list of applications available for navifation
+  // please note some URLs are relative and some are absolute.
   const pages = [
     { title: 'App1', src: '/app1' },
     { title: 'App2', src: '/app2' },
@@ -101,15 +121,20 @@ function Host() {
     { title: 'App2-remote', src: 'http://localhost:8002/app2' },
   ]
 
+  // this part registers the API event handler so that the host
+  // is capable of responding to any messages sent from the applications
   React.useEffect(() => {
     console.log('HOST: Registering API')
-    window.addEventListener('message', api)
+    window.addEventListener('message', apiHandler)
     return () => {
       console.log('HOST: Unregistering API')
-      window.removeEventListener('message', api)
+      window.removeEventListener('message', apiHandler)
     }
   }, [])
 
+  /**
+   * This method pushes metadata to newly opened application
+   */
   function sendMetadata() {
     sendMessageToIFrame(iframe.current as HTMLIFrameElement, 'metadata', {
       hostOrigin: window.location.origin,

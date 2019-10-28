@@ -24,6 +24,10 @@ window.addEventListener('message', event => {
   }
 })
 
+interface ExampleWebsocketPayload {
+  timestamp: string
+}
+
 /**
  * Create a proxied websocket observable
  * 
@@ -31,11 +35,11 @@ window.addEventListener('message', event => {
  * @param params optional parameters to send with the message
  * @param source optional alternate source for the message (leave alone!)
  */
-function websocket(message, params = null, source = 'application'): Observable<any> {
+function websocket<T> (message, params = null, source = 'application'): Observable<T> {
   const id = uuid()
 
   // create observable that will transfer the data to the subscriber
-  return new Observable(subscriber => {
+  return new Observable<T>(subscriber => {
     const handler = (event: MessageEvent) => {
       if (event.data.source === 'host' && event.data.id === id) {
         console.log('APP2: received message for subject', event.data)
@@ -80,7 +84,7 @@ function App () {
 
   React.useEffect(() => {
     // create subscription
-    const subscription = websocket('example-websocket').subscribe(data => {
+    const subscription = websocket<ExampleWebsocketPayload>('example-websocket').subscribe(data => {
       console.log('APP2: data from parent websocket', data, messages)
       setMessages(msgs => [ ...msgs, data.timestamp ])
     })
