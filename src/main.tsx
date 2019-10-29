@@ -108,7 +108,8 @@ function sendMessageToIFrame(iframe: HTMLIFrameElement, message: string, payload
 }
 
 function Host() {
-  const [ page, setPage ] = React.useState('/app1')
+  const initialPage = window.location.hash ? window.location.hash.slice(1) : '/app1'
+  const [ page, setPage ] = React.useState(initialPage)
   const iframe = React.useRef()
 
   // list of applications available for navifation
@@ -133,6 +134,9 @@ function Host() {
 
   /**
    * This method pushes metadata to newly opened application
+   * Ideally the application will start after the metadata is received
+   * so that any calls to get resources via parent window will have
+   * proper information.
    */
   function sendMetadata() {
     sendMessageToIFrame(iframe.current as HTMLIFrameElement, 'metadata', {
@@ -168,3 +172,14 @@ function Host() {
 }
 
 render(<Host />, document.getElementById('app'))
+
+// Potential additional capabilities to be implemented:
+//
+// 1. multiple apps in one view (easy)
+// 2. communication between apps
+//    - with the use of parent as broker (easy)
+//    - direct messaging between apps (possible but unknown at this stage)
+
+console.log('HOST: Example environment variable:', process.env.API_KEY)
+console.log('HOST: Example environment variable:', process.env.APP_API_KEY)
+console.log('HOST: Example environment variable:', process.env.REACT_APP_API_KEY)
