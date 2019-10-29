@@ -180,6 +180,8 @@ render(<Host />, document.getElementById('app'))
 //    - with the use of parent as broker (easy)
 //    - direct messaging between apps (possible but unknown at this stage)
 
+console.log('HOST: Example environment variable:', process.env.API)
+console.log('HOST: Example environment variable:', process.env.TEST_KEY)
 console.log('HOST: Example environment variable:', process.env.API_KEY)
 console.log('HOST: Example environment variable:', process.env.APP_API_KEY)
 console.log('HOST: Example environment variable:', process.env.REACT_APP_API_KEY)
