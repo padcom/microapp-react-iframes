@@ -113,8 +113,6 @@ function App () {
   )
 }
 
-render(<App />, document.getElementById('app'))
-
 console.log('APP1: Example environment variable:', process.env.API_KEY)
 console.log('APP1: Example environment variable:', process.env.APP_API_KEY)
 console.log('APP1: Example environment variable:', process.env.REACT_APP_API_KEY)
