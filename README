@@ -1,0 +1,14 @@
+How to start?
+
+1. Open 3 terminal windows
+2. In the first open up the root folder and type
+   npm install && npm start
+   The application will start on port 8080
+3. In the second one open up the /app1 folder and type
+   npm install && npm start
+   The application will start on port 8001 with the path /app1
+4. In the third one open up the /app1 folder and type
+   npm install && npm start
+   The application will start on port 8002 with the path /app2
+
+Go to your browser and navigate to http://localhost:8080
